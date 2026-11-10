@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envío Masivo WhatsApp · Black Friday Marcimex</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--card2:#1f1f25;--line:#2c2c34;--txt:#ececf1;--mut:#9a9aa8;--gold:#f5c542;--red:#e63946;--green:#25d366;--green2:#128c4a}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+header{background:linear-gradient(90deg,#000,#1a1a1a);border-bottom:3px solid var(--gold);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:20px;letter-spacing:.5px}
+header h1 span{color:var(--gold)}
+header .tag{background:var(--red);color:#fff;font-weight:800;padding:3px 10px;border-radius:4px;font-size:12px}
+main{max-width:1250px;margin:0 auto;padding:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--gold);display:flex;align-items:center;gap:8px}
+.card h2 b{background:var(--gold);color:#000;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+label{display:block;font-size:12px;color:var(--mut);margin:8px 0 4px}
+input,select,textarea{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:190px;resize:vertical;line-height:1.45}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:120px}
+button{cursor:pointer;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:600;background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+button:hover{filter:brightness(1.2)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btn-green{background:var(--green);color:#04210f;border:0}
+.btn-gold{background:var(--gold);color:#000;border:0}
+.btn-red{background:var(--red);color:#fff;border:0}
+.btn-big{font-size:17px;padding:14px 22px}
+.hint{font-size:12px;color:var(--mut);line-height:1.5}
+.vars span{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;margin:2px;font-family:monospace;font-size:12px;cursor:pointer}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;cursor:pointer;color:var(--mut)}
+.drop:hover,.drop.on{border-color:var(--gold);color:var(--txt)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stat{background:var(--card2);border-radius:10px;padding:10px;text-align:center}
+.stat div{font-size:22px;font-weight:800}
+.stat small{color:var(--mut);font-size:11px}
+.bar{height:8px;background:var(--card2);border-radius:5px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green2),var(--green));width:0;transition:.3s}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:600;padding:7px 6px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card)}
+td{padding:7px 6px;border-bottom:1px solid #222228}
+tr.sent td{opacity:.45}
+tr.cur td{background:#2a2410}
+.tbl{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.pill{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--card2);white-space:nowrap}
+.ok{color:var(--green);font-weight:700}
+.preview{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+canvas{width:260px;height:260px;border-radius:10px;border:1px solid var(--line)}
+.bubble{flex:1;min-width:220px;background:#005c4b;color:#e9edef;border-radius:8px 8px 0 8px;padding:10px 12px;white-space:pre-wrap;font-size:13px;line-height:1.45}
+.next{background:linear-gradient(135deg,#1d1a0b,#17171b);border:1px solid var(--gold)}
+.next .who{font-size:18px;font-weight:700}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;border:1px solid var(--gold);padding:12px 18px;border-radius:10px;display:none;z-index:9;max-width:90%;text-align:center}
+.steps{counter-reset:s;padding-left:0;list-style:none;margin:6px 0 0}
+.steps li{counter-increment:s;margin:5px 0;padding-left:28px;position:relative;font-size:13px}
+.steps li:before{content:counter(s);position:absolute;left:0;top:0;background:var(--green);color:#000;width:20px;height:20px;border-radius:50%;text-align:center;font-weight:800;font-size:12px;line-height:20px}
+.gal{display:flex;flex-wrap:wrap;gap:10px}
+.th{position:relative;width:130px;border:2px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;background:var(--card2)}
+.th.sel{border-color:var(--green)}
+.th img{width:100%;height:130px;object-fit:cover;display:block}
+.th .nm{font-size:11px;padding:4px 6px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th .ck{position:absolute;top:6px;left:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.6);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.th.sel .ck{background:var(--green);color:#000;border-color:var(--green)}
+.th .del{position:absolute;top:6px;right:6px;padding:1px 7px;font-size:12px;background:rgba(0,0,0,.7);border:0}
+.cola{position:fixed;right:20px;bottom:20px;background:#000;border:2px solid var(--green);border-radius:12px;padding:12px;z-index:10;display:none;text-align:center;max-width:260px}
+.cola img{width:100%;max-height:140px;object-fit:contain;border-radius:6px;margin-bottom:8px}
+kbd{background:#333;border-radius:4px;padding:1px 6px;font-size:12px;border:1px solid #555}
+.warn{background:#2b1414;border:1px solid #5c2323;border-radius:8px;padding:10px;font-size:12px;color:#f3b9b9;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">BLACK FRIDAY</span>
+  <h1>Envío Masivo por <span>WhatsApp Web</span> · Marcimex</h1>
+</header>
+
+<main>
+<div class="grid">
+  <!-- 1. Asesor y base -->
+  <div class="card">
+    <h2><b>1</b> Asesor y base de clientes</h2>
+    <div class="row">
+      <div><label>Nombre del asesor</label><input id="asesor" placeholder="Ej.: María López"></div>
+      <div><label>Tienda</label><input id="tienda" value="Marcimex Bucay"></div>
+    </div>
+    <div class="row">
+      <div><label>¿Entre cuántos asesores se reparte la base?</label><input id="nAses" type="number" min="1" value="1"></div>
+      <div><label>Yo soy el asesor número</label><select id="miNum"></select></div>
+    </div>
+    <label>Archivo Excel de la base</label>
+    <div class="drop" id="drop">📂 Arrastra aquí el Excel o haz clic para elegirlo<br><small>Columnas: NOMBRE_CLIENTE, CELULAR, CELULAR2, SEGMENTACION_ACTUAL, CUPO_DISPONIBLE, CAMPAÑA, CIUDAD…</small></div>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+    <p class="hint" id="baseInfo">Sin base cargada.</p>
+  </div>
+
+  <!-- 2. Mensaje -->
+  <div class="card">
+    <h2><b>2</b> Mensaje de Black Friday</h2>
+    <div class="vars hint">Toca para insertar:
+      <span data-v="{nombre}">{nombre}</span><span data-v="{nombre_completo}">{nombre_completo}</span><span data-v="{cupo}">{cupo}</span><span data-v="{segmento}">{segmento}</span><span data-v="{campana}">{campana}</span><span data-v="{tienda}">{tienda}</span><span data-v="{asesor}">{asesor}</span>
+    </div>
+    <textarea id="msg"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="btnDefaultMsg">↺ Texto original</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Imagen -->
+<div class="card">
+  <h2><b>3</b> Imagen de Black Friday</h2>
+  <div class="preview">
+    <canvas id="cv" width="1080" height="1080"></canvas>
+    <div style="flex:1;min-width:260px">
+      <div class="row">
+        <div><label>Título grande</label><input id="iTitulo" value="BLACK FRIDAY"></div>
+        <div><label>Fecha / vigencia</label><input id="iFecha" value="Del 27 al 30 de noviembre"></div>
+      </div>
+      <div class="row">
+        <div><label>Frase principal</label><input id="iFrase" value="Descuentos que no vuelven"></div>
+        <div><label>Descuento (texto grande)</label><input id="iDesc" value="HASTA 40% OFF"></div>
+      </div>
+      <label>Línea inferior</label><input id="iLinea" value="Línea blanca · Audio y video · Tecnología · Motos">
+      <div class="row" style="margin-top:10px">
+        <button id="btnDl">⬇️ Descargar imagen generada</button>
+      </div>
+      <p class="hint">Revisa el porcentaje y las fechas antes de enviar: deben coincidir con la promoción real de la tienda.</p>
+    </div>
+  </div>
+  <h3 style="margin:18px 0 6px;font-size:14px">Mis imágenes para enviar</h3>
+  <div class="drop" id="imgDrop">🖼️ Arrastra aquí tus imágenes o haz clic para subirlas (puedes subir varias)</div>
+  <input type="file" id="imgFile" accept="image/*" multiple hidden>
+  <p class="hint">Marca con ✔ las imágenes que se enviarán a cada cliente. Si marcas varias, se envían una tras otra. Quedan guardadas en este navegador.</p>
+  <div class="gal" id="gal"></div>
+</div>
+
+<!-- 4. Envío -->
+<div class="card next" id="nextCard">
+  <h2><b>4</b> Envío</h2>
+  <div class="stats">
+    <div class="stat"><div id="sTot">0</div><small>Mis clientes</small></div>
+    <div class="stat"><div id="sEnv" class="ok">0</div><small>Enviados</small></div>
+    <div class="stat"><div id="sPen">0</div><small>Pendientes</small></div>
+    <div class="stat"><div id="sHoy">0</div><small>Enviados hoy</small></div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+
+  <div class="row" style="align-items:flex-end">
+    <div><label>Qué enviar</label>
+      <select id="modo">
+        <option value="ambos">Texto + imagen</option>
+        <option value="texto">Solo texto</option>
+        <option value="imagen">Solo imagen</option>
+      </select></div>
+    <div><label>Pausa sugerida cada</label>
+      <select id="pausa"><option value="15">15 mensajes</option><option value="20" selected>20 mensajes</option><option value="30">30 mensajes</option><option value="0">Sin pausa</option></select></div>
+    <div style="flex:2">
+      <div class="who" id="nextWho">—</div>
+      <div class="hint" id="nextInfo">Carga la base para empezar.</div>
+    </div>
+    <div style="flex:0 0 auto"><button class="btn-green btn-big" id="btnNext" disabled>📲 Enviar siguiente</button></div>
+  </div>
+  <ol class="steps" id="howto">
+    <li>Al pulsar <b>Enviar siguiente</b> se abre WhatsApp Web con el chat del cliente y el texto ya escrito.</li>
+    <li>Presiona <kbd>Enter</kbd> para enviar el texto.</li>
+    <li>La imagen ya quedó copiada: presiona <kbd>Ctrl</kbd>+<kbd>V</kbd> en el chat y luego <kbd>Enter</kbd>.</li>
+    <li>Vuelve a esta pestaña y pulsa <b>Enviar siguiente</b> para el próximo cliente.</li>
+  </ol>
+</div>
+
+<!-- 5. Lista -->
+<div class="card">
+  <h2><b>5</b> Mis clientes</h2>
+  <div class="row">
+    <div><label>Buscar</label><input id="fBus" placeholder="Nombre, cédula o celular"></div>
+    <div><label>Segmento</label><select id="fSeg"></select></div>
+    <div><label>Campaña</label><select id="fCamp"></select></div>
+    <div><label>Ciudad</label><select id="fCiu"></select></div>
+    <div><label>Estado</label><select id="fEst"><option value="">Todos</option><option value="pen" selected>Pendientes</option><option value="env">Enviados</option></select></div>
+  </div>
+  <div class="row" style="margin:10px 0">
+    <button id="btnExport">📊 Descargar reporte Excel</button>
+    <button class="btn-red" id="btnReset" style="flex:0 0 auto">Reiniciar marcas de enviado</button>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>#</th><th>Cliente</th><th>Celular</th><th>Segmento</th><th>Campaña</th><th>Cupo</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</div>
+</main>
+<div class="toast" id="toast"></div>
+<div class="cola" id="cola">
+  <img id="colaImg" alt="">
+  <div class="hint" id="colaTxt" style="margin-bottom:8px"></div>
+  <button class="btn-green" id="btnColaSig" style="width:100%">📋 Copiar siguiente imagen</button>
+  <button id="btnColaFin" style="width:100%;margin-top:6px">Listo</button>
+</div>
+
+<script>
+/* ===== utilidades ===== */
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function toast(t,ms=3500){const x=$('toast');x.innerHTML=t;x.style.display='block';clearTimeout(x._t);x._t=setTimeout(()=>x.style.display='none',ms)}
+const hoy=()=>new Date().toISOString().slice(0,10);
+const title=s=>String(s||'').toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
+const money=n=>{const v=Number(n);return isNaN(v)?'':v.toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2})};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Normaliza celular ecuatoriano a 5939XXXXXXXX */
+function normCel(v){
+  let d=String(v??'').replace(/\D/g,'');
+  if(!d) return '';
+  if(d.startsWith('593')) d=d.slice(3);
+  if(d.startsWith('0')) d=d.slice(1);
+  return /^9\d{8}$/.test(d)?'593'+d:'';
+}
+/* Nombre de pila: la base viene APELLIDO APELLIDO NOMBRE NOMBRE */
+function primerNombre(full){
+  const p=String(full||'').trim().split(/\s+/);
+  if(p.length>=3) return title(p[2]);
+  return title(p[p.length-1]||'');
+}
+
+/* ===== estado ===== */
+let todos=[];      // toda la base
+let mios=[];       // mi parte
+let enviados=store.get('bf_enviados',{});   // {clave:{f:fecha,h:hora,a:asesor}}
+let sesionCount=0;
+
+/* ===== mensaje ===== */
+const MSG_DEFAULT=`Hola {nombre} 👋
+
+¡Llegó el *BLACK FRIDAY* a *{tienda}*! 🖤🔥
+
+Por ser cliente *{segmento}* tienes un cupo disponible de *\${cupo}* para estrenar lo que más te guste: línea blanca, audio y video, tecnología, motos y mucho más.
+
+🛍️ Descuentos especiales por tiempo limitado.
+📍 Visítanos en tienda o respóndeme por aquí y te asesoro.
+
+Te saluda {asesor}, tu asesor(a) de {tienda}.`;
+
+function armar(c){
+  const seg=String(c.seg||'').replace(/^CLIENTE\s+/i,'');
+  return $('msg').value
+    .replaceAll('{nombre_completo}',title(c.nombre))
+    .replaceAll('{nombre}',primerNombre(c.nombre))
+    .replaceAll('{cupo}',money(c.cupo))
+    .replaceAll('{segmento}',seg)
+    .replaceAll('{campana}',title(String(c.camp||'').replace(/_/g,' ')))
+    .replaceAll('{tienda}',$('tienda').value.trim()||'Marcimex')
+    .replaceAll('{asesor}',$('asesor').value.trim()||'tu asesor');
+}
+
+/* ===== imagen Black Friday ===== */
+const cv=$('cv'),ctx=cv.getContext('2d');
+function wrapCenter(text,y,maxW,lh){
+  const words=text.split(' ');let line='';const lines=[];
+  for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w}else line=t}
+  if(line)lines.push(line);
+  lines.forEach((l,i)=>ctx.fillText(l,540,y+i*lh));
+  return y+lines.length*lh;
+}
+function fit(text,max,font,maxW){let s=max;do{ctx.font=`${font} ${s}px Arial Black, Impact, Arial, sans-serif`;s-=4}while(ctx.measureText(text).width>maxW&&s>30);}
+function dibujar(){
+  const g=ctx.createRadialGradient(540,420,80,540,540,820);g.addColorStop(0,'#2a2a2a');g.addColorStop(1,'#000');
+  ctx.fillStyle=g;ctx.fillRect(0,0,1080,1080);
+  // franjas diagonales
+  ctx.save();ctx.globalAlpha=.10;ctx.fillStyle='#f5c542';
+  for(let i=-1080;i<2160;i+=90){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+40,0);ctx.lineTo(i+40-1080,1080);ctx.lineTo(i-1080,1080);ctx.fill()}
+  ctx.restore();
+  // marco
+  ctx.strokeStyle='#f5c542';ctx.lineWidth=10;ctx.strokeRect(36,36,1008,1008);
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  // tienda
+  ctx.fillStyle='#fff';ctx.font='bold 46px Arial, sans-serif';
+  ctx.fillText(($('tienda').value||'Marcimex').toUpperCase(),540,140);
+  ctx.fillStyle='#f5c542';ctx.fillRect(390,165,300,5);
+  // título
+  const t=$('iTitulo').value.toUpperCase().split(' ');
+  ctx.fillStyle='#fff';ctx.shadowColor='rgba(245,197,66,.55)';ctx.shadowBlur=30;
+  if(t.length>=2){fit(t[0],190,'900',920);ctx.fillText(t[0],540,340);fit(t.slice(1).join(' '),190,'900',920);ctx.fillStyle='#f5c542';ctx.fillText(t.slice(1).join(' '),540,510)}
+  else{fit(t[0],190,'900',920);ctx.fillText(t[0],540,440)}
+  ctx.shadowBlur=0;
+  // franja descuento
+  ctx.fillStyle='#e63946';ctx.save();ctx.translate(540,640);ctx.rotate(-0.04);ctx.fillRect(-440,-75,880,140);
+  ctx.fillStyle='#fff';fit($('iDesc').value.toUpperCase(),110,'900',820);ctx.fillText($('iDesc').value.toUpperCase(),0,32);ctx.restore();
+  // frase
+  ctx.fillStyle='#fff';ctx.font='bold 54px Arial, sans-serif';
+  let y=wrapCenter($('iFrase').value,810,900,62);
+  // fecha
+  ctx.fillStyle='#f5c542';ctx.font='bold 42px Arial, sans-serif';ctx.fillText($('iFecha').value,540,y+20);
+  // línea inferior
+  ctx.fillStyle='#bbb';ctx.font='30px Arial, sans-serif';wrapCenter($('iLinea').value,1000,940,36);
+  clearTimeout(dibujar._t);dibujar._t=setTimeout(()=>{const t=document.querySelector('.th[data-id="gen"] img');if(t)t.src=cv.toDataURL('image/jpeg',.6)},300);
+}
+function canvasBlob(){return new Promise(r=>cv.toBlob(r,'image/png'))}
+
+/* ===== mis imágenes (guardadas en IndexedDB) ===== */
+let misImgs=[];   // {id,name,blob,url,sel}
+let selGen=store.get('bf_selGen',true);
+const DB={db:null,
+  open(){return new Promise(res=>{try{const r=indexedDB.open('bf_imagenes',1);r.onupgradeneeded=()=>r.result.createObjectStore('img',{keyPath:'id'});r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>res()}catch(e){res()}})},
+  tx(m){return this.db?this.db.transaction('img',m).objectStore('img'):null},
+  all(){return new Promise(res=>{const s=this.tx('readonly');if(!s)return res([]);const q=s.getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])})},
+  put(o){try{this.tx('readwrite')?.put({id:o.id,name:o.name,blob:o.blob,sel:o.sel})}catch(e){}},
+  del(id){try{this.tx('readwrite')?.delete(id)}catch(e){}}
+};
+/* Convierte cualquier imagen a PNG (WhatsApp/portapapeles solo aceptan PNG) */
+function aPNG(file){
+  return new Promise((res,rej)=>{const im=new Image();im.onload=()=>{
+    const max=1600,r=Math.min(1,max/Math.max(im.width,im.height));
+    const c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?res(b):rej(),'image/png');URL.revokeObjectURL(im.src)};
+    im.onerror=rej;im.src=URL.createObjectURL(file)});
+}
+async function subirImgs(files){
+  let n=0;
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    try{const blob=await aPNG(f);const o={id:Date.now()+'_'+Math.random().toString(36).slice(2,7),name:f.name,blob,url:URL.createObjectURL(blob),sel:true};
+      misImgs.push(o);DB.put(o);n++}catch(e){}
+  }
+  if(n){selGen=false;store.set('bf_selGen',false)}
+  renderGal();toast(n?`✔ ${n} imagen(es) agregada(s)`:'No se pudo leer la imagen.');
+}
+function renderGal(){
+  $('gal').innerHTML=`<div class="th ${selGen?'sel':''}" data-id="gen"><span class="ck">${selGen?'✔':''}</span><img src="${cv.toDataURL('image/jpeg',.6)}"><div class="nm">Imagen generada</div></div>`+
+    misImgs.map(o=>`<div class="th ${o.sel?'sel':''}" data-id="${o.id}"><span class="ck">${o.sel?'✔':''}</span><button class="del" data-del="${o.id}" title="Quitar">✕</button><img src="${o.url}"><div class="nm">${esc(o.name)}</div></div>`).join('');
+}
+function imgsSeleccionadas(){
+  const l=[];if(selGen)l.push({name:'Imagen generada',get:canvasBlob,url:null});
+  misImgs.filter(o=>o.sel).forEach(o=>l.push({name:o.name,get:()=>Promise.resolve(o.blob),url:o.url}));
+  return l;
+}
+async function copiarBlob(p){
+  try{
+    if(!navigator.clipboard||!window.ClipboardItem) throw 0;
+    await navigator.clipboard.write([new ClipboardItem({'image/png':p})]);
+    return true;
+  }catch(e){return false}
+}
+/* cola de imágenes cuando hay varias seleccionadas */
+let cola=[],colaPos=0;
+function mostrarCola(){
+  const it=cola[colaPos];
+  $('colaImg').src=it.url||cv.toDataURL('image/jpeg',.6);
+  $('colaTxt').innerHTML=`Imagen ${colaPos+1} de ${cola.length} copiada: pégala con <kbd>Ctrl</kbd>+<kbd>V</kbd> y <kbd>Enter</kbd>.`;
+  $('btnColaSig').style.display=colaPos<cola.length-1?'block':'none';
+  $('cola').style.display='block';
+}
+
+/* ===== carga de Excel ===== */
+function leerExcel(file){
+  const fr=new FileReader();
+  fr.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
+      const key=(o,...names)=>{for(const n of names){const k=Object.keys(o).find(x=>x.trim().toUpperCase()===n);if(k!==undefined&&o[k]!=='')return o[k]}return ''};
+      const vistos=new Set();let sinCel=0,dup=0;
+      todos=[];
+      rows.forEach((r,i)=>{
+        const cel=normCel(key(r,'CELULAR','TELEFONO','TELÉFONO','CELULAR1'))||normCel(key(r,'CELULAR2','TELEFONO2'));
+        const nombre=key(r,'NOMBRE_CLIENTE','NOMBRE','CLIENTE','NOMBRE DEL CLIENTE');
+        if(!cel){sinCel++;return}
+        if(vistos.has(cel)){dup++;return}
+        vistos.add(cel);
+        todos.push({id:String(key(r,'NRO_IDENTIFICACION','CEDULA','CÉDULA','IDENTIFICACION')||cel),
+          cod:key(r,'CODIGO_CLIENTE'),nombre,cel,
+          seg:key(r,'SEGMENTACION_ACTUAL','SEGMENTO','SEGMENTACION'),
+          camp:key(r,'CAMPAÑA','CAMPANA'),ciudad:key(r,'CIUDAD'),
+          cupo:parseFloat(String(key(r,'CUPO_DISPONIBLE','CUPO')).replace(',','.'))||0});
+      });
+      $('baseInfo').innerHTML=`✅ <b>${esc(file.name)}</b>: ${todos.length} clientes con celular válido`+
+        (sinCel?` · ${sinCel} sin celular válido`:'')+(dup?` · ${dup} celulares repetidos omitidos`:'');
+      store.set('bf_baseNombre',file.name);
+      repartir();
+    }catch(err){toast('No se pudo leer el archivo: '+esc(err.message))}
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+/* ===== reparto entre asesores ===== */
+function llenarMiNum(){
+  const n=Math.max(1,parseInt($('nAses').value)||1),sel=$('miNum'),prev=store.get('bf_miNum',1);
+  sel.innerHTML='';for(let i=1;i<=n;i++)sel.add(new Option('Asesor '+i,i));
+  sel.value=Math.min(prev,n);
+}
+function repartir(){
+  const n=Math.max(1,parseInt($('nAses').value)||1),k=parseInt($('miNum').value)||1;
+  const tam=Math.ceil(todos.length/n);
+  mios=todos.slice((k-1)*tam,k*tam);
+  llenarFiltros();render();
+}
+function llenarFiltros(){
+  const opts=(id,campo,label)=>{const s=$(id),prev=s.value;const vals=[...new Set(mios.map(c=>c[campo]).filter(Boolean))].sort();
+    s.innerHTML=`<option value="">${label}</option>`+vals.map(v=>`<option>${esc(v)}</option>`).join('');s.value=vals.includes(prev)?prev:''};
+  opts('fSeg','seg','Todos');opts('fCamp','camp','Todas');opts('fCiu','ciudad','Todas');
+}
+function filtrados(){
+  const b=$('fBus').value.trim().toLowerCase(),s=$('fSeg').value,c=$('fCamp').value,ci=$('fCiu').value,e=$('fEst').value;
+  return mios.filter(x=>(!s||x.seg===s)&&(!c||x.camp===c)&&(!ci||x.ciudad===ci)&&
+    (!e||(e==='env')===!!enviados[x.id])&&
+    (!b||x.nombre.toLowerCase().includes(b)||x.id.includes(b)||x.cel.includes(b)));
+}
+
+/* ===== render ===== */
+function siguiente(){
+  const b=$('fBus').value.trim().toLowerCase(),s=$('fSeg').value,c=$('fCamp').value,ci=$('fCiu').value;
+  return mios.find(x=>!enviados[x.id]&&(!s||x.seg===s)&&(!c||x.camp===c)&&(!ci||x.ciudad===ci)&&
+    (!b||x.nombre.toLowerCase().includes(b)||x.id.includes(b)||x.cel.includes(b)));
+}
+function render(){
+  const env=mios.filter(x=>enviados[x.id]).length;
+  const envHoy=Object.values(enviados).filter(v=>v.f===hoy()).length;
+  $('sTot').textContent=mios.length;$('sEnv').textContent=env;$('sPen').textContent=mios.length-env;$('sHoy').textContent=envHoy;
+  $('bar').style.width=(mios.length?env/mios.length*100:0)+'%';
+  const nx=siguiente();
+  $('btnNext').disabled=!nx;
+  if(nx){$('nextWho').textContent=title(nx.nombre);$('nextInfo').textContent=`+${nx.cel} · ${nx.seg} · cupo $${money(nx.cupo)}`}
+  else{$('nextWho').textContent=mios.length?'🎉 ¡Terminaste tu lista!':'—';$('nextInfo').textContent=mios.length?'No quedan pendientes con los filtros actuales.':'Carga la base para empezar.'}
+  const list=filtrados();
+  $('tb').innerHTML=list.slice(0,1000).map(x=>{
+    const e=enviados[x.id];
+    return `<tr class="${e?'sent':''} ${nx&&nx.id===x.id?'cur':''}">
+      <td>${mios.indexOf(x)+1}</td><td>${esc(title(x.nombre))}<br><small class="hint">${esc(x.ciudad)}</small></td>
+      <td>${x.cel.slice(3).replace(/^/,'0')}</td><td><span class="pill">${esc(x.seg)}</span></td>
+      <td><span class="pill">${esc(String(x.camp).replace(/_/g,' '))}</span></td><td>$${money(x.cupo)}</td>
+      <td>${e?`<span class="ok">✔ ${e.f.slice(8,10)}/${e.f.slice(5,7)} ${e.h}</span>`:'Pendiente'}</td>
+      <td style="white-space:nowrap"><button data-send="${esc(x.id)}">📲</button> ${e?`<button data-undo="${esc(x.id)}" title="Desmarcar">↩</button>`:''}</td></tr>`}).join('')
+    ||'<tr><td colspan="8" class="hint" style="text-align:center;padding:20px">Sin clientes para mostrar.</td></tr>';
+}
+
+/* ===== envío ===== */
+async function enviar(c){
+  if(!$('asesor').value.trim()){toast('Escribe tu nombre de asesor antes de enviar.');$('asesor').focus();return}
+  const modo=$('modo').value;
+  let copiada=false;
+  if(modo!=='texto'){
+    cola=imgsSeleccionadas();colaPos=0;
+    if(!cola.length){toast('Marca al menos una imagen en la sección 3, o elige “Solo texto”.');return}
+    copiada=await copiarBlob(cola[0].get());
+    if(copiada&&cola.length>1) mostrarCola(); else $('cola').style.display='none';
+  }
+  const txt=modo==='imagen'?'':armar(c);
+  const url=`https://web.whatsapp.com/send?phone=${c.cel}`+(txt?`&text=${encodeURIComponent(txt)}`:'');
+  window.open(url,'whatsapp_envio');
+  const d=new Date();
+  enviados[c.id]={f:hoy(),h:d.toTimeString().slice(0,5),a:$('asesor').value.trim()};
+  store.set('bf_enviados',enviados);
+  sesionCount++;
+  render();
+  if(modo!=='texto'){
+    toast(copiada?'🖼️ Imagen copiada. En WhatsApp: <kbd>Enter</kbd> para el texto, luego <kbd>Ctrl</kbd>+<kbd>V</kbd> y <kbd>Enter</kbd> para la imagen.'
+                 :'No se pudo copiar la imagen automáticamente. Adjúntala en WhatsApp con el clip 📎.',6000);
+  }
+  const p=parseInt($('pausa').value);
+  if(p&&sesionCount%p===0) setTimeout(()=>toast(`☕ Llevas ${sesionCount} mensajes. Haz una pausa de 3 a 5 minutos para cuidar tu número.`,9000),6500);
+}
+
+/* ===== reporte ===== */
+function exportar(){
+  if(!mios.length){toast('Primero carga la base.');return}
+  const data=mios.map((x,i)=>({N:i+1,CEDULA:x.id,CODIGO_CLIENTE:x.cod,CLIENTE:x.nombre,CELULAR:'0'+x.cel.slice(3),SEGMENTO:x.seg,CAMPAÑA:x.camp,CIUDAD:x.ciudad,CUPO:x.cupo,
+    ESTADO:enviados[x.id]?'ENVIADO':'PENDIENTE',FECHA:enviados[x.id]?.f||'',HORA:enviados[x.id]?.h||'',ASESOR:enviados[x.id]?.a||$('asesor').value}));
+  const ws=XLSX.utils.json_to_sheet(data),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Envios');
+  XLSX.writeFile(wb,`Reporte_BlackFriday_${($('asesor').value||'asesor').replace(/\s+/g,'_')}_${hoy()}.xlsx`);
+}
+
+/* ===== eventos ===== */
+$('msg').value=store.get('bf_msg',MSG_DEFAULT);
+$('asesor').value=store.get('bf_asesor','');
+$('tienda').value=store.get('bf_tienda','Marcimex Bucay');
+$('nAses').value=store.get('bf_nAses',1);
+llenarMiNum();
+['asesor','tienda'].forEach(id=>$(id).addEventListener('input',()=>{store.set('bf_'+id,$(id).value);if(id==='tienda')dibujar()}));
+$('msg').addEventListener('input',()=>store.set('bf_msg',$('msg').value));
+$('btnDefaultMsg').onclick=()=>{$('msg').value=MSG_DEFAULT;store.set('bf_msg',MSG_DEFAULT)};
+document.querySelectorAll('.vars span').forEach(s=>s.onclick=()=>{const t=$('msg'),p=t.selectionStart;t.value=t.value.slice(0,p)+s.dataset.v+t.value.slice(t.selectionEnd);t.focus();t.selectionStart=t.selectionEnd=p+s.dataset.v.length;store.set('bf_msg',t.value)});
+$('nAses').addEventListener('change',()=>{store.set('bf_nAses',$('nAses').value);llenarMiNum();repartir()});
+$('miNum').addEventListener('change',()=>{store.set('bf_miNum',+$('miNum').value);repartir()});
+const drop=$('drop');
+drop.onclick=()=>$('file').click();
+$('file').onchange=e=>e.target.files[0]&&leerExcel(e.target.files[0]);
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('on')};
+drop.ondragleave=()=>drop.classList.remove('on');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('on');e.dataTransfer.files[0]&&leerExcel(e.dataTransfer.files[0])};
+['fBus','fSeg','fCamp','fCiu','fEst'].forEach(id=>$(id).addEventListener('input',render));
+['iTitulo','iFecha','iFrase','iDesc','iLinea'].forEach(id=>{$(id).value=store.get('bf_'+id,$(id).value);$(id).addEventListener('input',()=>{store.set('bf_'+id,$(id).value);dibujar()})});
+const idrop=$('imgDrop');
+idrop.onclick=()=>$('imgFile').click();
+$('imgFile').onchange=e=>{subirImgs([...e.target.files]);e.target.value=''};
+idrop.ondragover=e=>{e.preventDefault();idrop.classList.add('on')};
+idrop.ondragleave=()=>idrop.classList.remove('on');
+idrop.ondrop=e=>{e.preventDefault();idrop.classList.remove('on');subirImgs([...e.dataTransfer.files])};
+$('gal').onclick=e=>{
+  const d=e.target.closest('[data-del]');
+  if(d){const i=misImgs.findIndex(o=>o.id===d.dataset.del);if(i>-1){URL.revokeObjectURL(misImgs[i].url);DB.del(misImgs[i].id);misImgs.splice(i,1);renderGal()}return}
+  const t=e.target.closest('.th');if(!t)return;
+  if(t.dataset.id==='gen'){selGen=!selGen;store.set('bf_selGen',selGen)}
+  else{const o=misImgs.find(x=>x.id===t.dataset.id);if(o){o.sel=!o.sel;DB.put(o)}}
+  renderGal();
+};
+$('btnColaSig').onclick=async()=>{colaPos++;const ok=await copiarBlob(cola[colaPos].get());if(ok)mostrarCola();else toast('No se pudo copiar la imagen.')};
+$('btnColaFin').onclick=()=>$('cola').style.display='none';
+DB.open().then(()=>DB.all()).then(l=>{misImgs=l.map(o=>({...o,url:URL.createObjectURL(o.blob)}));renderGal()});
+$('btnDl').onclick=async()=>{const b=await canvasBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='black_friday.png';a.click()};
+$('btnNext').onclick=()=>{const c=siguiente();if(c)enviar(c)};
+$('tb').onclick=e=>{
+  const s=e.target.closest('[data-send]'),u=e.target.closest('[data-undo]');
+  if(s){const c=mios.find(x=>x.id===s.dataset.send);if(c)enviar(c)}
+  if(u){delete enviados[u.dataset.undo];store.set('bf_enviados',enviados);render()}
+};
+$('btnExport').onclick=exportar;
+$('btnReset').onclick=()=>{if(confirm('¿Borrar todas las marcas de "enviado" de este navegador?')){enviados={};store.set('bf_enviados',enviados);render()}};
+dibujar();render();
+</script>
+</body>
+</html>
