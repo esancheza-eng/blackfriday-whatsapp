@@ -67,7 +67,9 @@ canvas{width:260px;height:260px;border-radius:10px;border:1px solid var(--line)}
 .th.sel .ck{background:var(--green);color:#000;border-color:var(--green)}
 .th .del{position:absolute;top:6px;right:6px;padding:1px 7px;font-size:12px;background:rgba(0,0,0,.7);border:0}
 .cola{position:fixed;right:20px;bottom:20px;background:#000;border:2px solid var(--green);border-radius:12px;padding:12px;z-index:10;display:none;text-align:center;max-width:260px}
-.cola img{width:100%;max-height:140px;object-fit:contain;border-radius:6px;margin-bottom:8px}
+.cola img,.cola video{width:100%;max-height:140px;object-fit:contain;border-radius:6px;margin-bottom:8px}
+.th video{width:100%;height:130px;object-fit:cover;display:block;background:#000}
+.th .vid{position:absolute;bottom:30px;right:6px;background:rgba(0,0,0,.75);border-radius:5px;padding:1px 6px;font-size:11px}
 kbd{background:#333;border-radius:4px;padding:1px 6px;font-size:12px;border:1px solid #555}
 .warn{background:#2b1414;border:1px solid #5c2323;border-radius:8px;padding:10px;font-size:12px;color:#f3b9b9;margin-top:10px}
 </style>
@@ -117,6 +119,9 @@ kbd{background:#333;border-radius:4px;padding:1px 6px;font-size:12px;border:1px 
     <canvas id="cv" width="1080" height="1080"></canvas>
     <div style="flex:1;min-width:260px">
       <div class="row">
+        <div><label>Nombre de la tienda (arriba)</label><input id="iTienda" value="MARCIMEX BUCAY"></div>
+      </div>
+      <div class="row">
         <div><label>Título grande</label><input id="iTitulo" value="BLACK FRIDAY"></div>
         <div><label>Fecha / vigencia</label><input id="iFecha" value="Del 27 al 30 de noviembre"></div>
       </div>
@@ -132,9 +137,9 @@ kbd{background:#333;border-radius:4px;padding:1px 6px;font-size:12px;border:1px 
     </div>
   </div>
   <h3 style="margin:18px 0 6px;font-size:14px">Mis imágenes para enviar</h3>
-  <div class="drop" id="imgDrop">🖼️ Arrastra aquí tus imágenes o haz clic para subirlas (puedes subir varias)</div>
-  <input type="file" id="imgFile" accept="image/*" multiple hidden>
-  <p class="hint">Marca con ✔ las imágenes que se enviarán a cada cliente. Si marcas varias, se envían una tras otra. Quedan guardadas en este navegador.</p>
+  <div class="drop" id="imgDrop">🖼️🎬 Arrastra aquí tus imágenes o videos, o haz clic para subirlos (puedes subir varios)</div>
+  <input type="file" id="imgFile" accept="image/*,video/*" multiple hidden>
+  <p class="hint">Marca con ✔ lo que se enviará a cada cliente. Si marcas varias, se envían una tras otra. Quedan guardadas en este navegador. Los videos no se pueden copiar automáticamente: la app te avisa para adjuntarlos con el clip 📎.</p>
   <div class="gal" id="gal"></div>
 </div>
 
@@ -152,9 +157,9 @@ kbd{background:#333;border-radius:4px;padding:1px 6px;font-size:12px;border:1px 
   <div class="row" style="align-items:flex-end">
     <div><label>Qué enviar</label>
       <select id="modo">
-        <option value="ambos">Texto + imagen</option>
+        <option value="ambos">Texto + imagen/video</option>
         <option value="texto">Solo texto</option>
-        <option value="imagen">Solo imagen</option>
+        <option value="imagen">Solo imagen/video</option>
       </select></div>
     <div><label>Pausa sugerida cada</label>
       <select id="pausa"><option value="15">15 mensajes</option><option value="20" selected>20 mensajes</option><option value="30">30 mensajes</option><option value="0">Sin pausa</option></select></div>
@@ -197,6 +202,7 @@ kbd{background:#333;border-radius:4px;padding:1px 6px;font-size:12px;border:1px 
 <div class="toast" id="toast"></div>
 <div class="cola" id="cola">
   <img id="colaImg" alt="">
+  <video id="colaVid" muted style="display:none"></video>
   <div class="hint" id="colaTxt" style="margin-bottom:8px"></div>
   <button class="btn-green" id="btnColaSig" style="width:100%">📋 Copiar siguiente imagen</button>
   <button id="btnColaFin" style="width:100%;margin-top:6px">Listo</button>
@@ -280,7 +286,7 @@ function dibujar(){
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
   // tienda
   ctx.fillStyle='#fff';ctx.font='bold 46px Arial, sans-serif';
-  ctx.fillText(($('tienda').value||'Marcimex').toUpperCase(),540,140);
+  { const tn=($('iTienda').value||'').toUpperCase(); let s=46; do{ctx.font=`bold ${s}px Arial, sans-serif`;s-=2}while(ctx.measureText(tn).width>900&&s>20); ctx.fillText(tn,540,140); }
   ctx.fillStyle='#f5c542';ctx.fillRect(390,165,300,5);
   // título
   const t=$('iTitulo').value.toUpperCase().split(' ');
@@ -309,7 +315,7 @@ const DB={db:null,
   open(){return new Promise(res=>{try{const r=indexedDB.open('bf_imagenes',1);r.onupgradeneeded=()=>r.result.createObjectStore('img',{keyPath:'id'});r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>res()}catch(e){res()}})},
   tx(m){return this.db?this.db.transaction('img',m).objectStore('img'):null},
   all(){return new Promise(res=>{const s=this.tx('readonly');if(!s)return res([]);const q=s.getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])})},
-  put(o){try{this.tx('readwrite')?.put({id:o.id,name:o.name,blob:o.blob,sel:o.sel})}catch(e){}},
+  put(o){try{this.tx('readwrite')?.put({id:o.id,name:o.name,blob:o.blob,sel:o.sel,tipo:o.tipo||'img'})}catch(e){}},
   del(id){try{this.tx('readwrite')?.delete(id)}catch(e){}}
 };
 /* Convierte cualquier imagen a PNG (WhatsApp/portapapeles solo aceptan PNG) */
@@ -323,20 +329,22 @@ function aPNG(file){
 async function subirImgs(files){
   let n=0;
   for(const f of files){
-    if(!f.type.startsWith('image/'))continue;
-    try{const blob=await aPNG(f);const o={id:Date.now()+'_'+Math.random().toString(36).slice(2,7),name:f.name,blob,url:URL.createObjectURL(blob),sel:true};
+    const esVid=f.type.startsWith('video/');
+    if(!f.type.startsWith('image/')&&!esVid)continue;
+    try{const blob=esVid?f:await aPNG(f);const o={id:Date.now()+'_'+Math.random().toString(36).slice(2,7),name:f.name,blob,url:URL.createObjectURL(blob),sel:true,tipo:esVid?'vid':'img'};
       misImgs.push(o);DB.put(o);n++}catch(e){}
   }
   if(n){selGen=false;store.set('bf_selGen',false)}
-  renderGal();toast(n?`✔ ${n} imagen(es) agregada(s)`:'No se pudo leer la imagen.');
+  renderGal();toast(n?`✔ ${n} archivo(s) agregado(s)`:'No se pudo leer el archivo.');
 }
 function renderGal(){
   $('gal').innerHTML=`<div class="th ${selGen?'sel':''}" data-id="gen"><span class="ck">${selGen?'✔':''}</span><img src="${cv.toDataURL('image/jpeg',.6)}"><div class="nm">Imagen generada</div></div>`+
-    misImgs.map(o=>`<div class="th ${o.sel?'sel':''}" data-id="${o.id}"><span class="ck">${o.sel?'✔':''}</span><button class="del" data-del="${o.id}" title="Quitar">✕</button><img src="${o.url}"><div class="nm">${esc(o.name)}</div></div>`).join('');
+    misImgs.map(o=>`<div class="th ${o.sel?'sel':''}" data-id="${o.id}"><span class="ck">${o.sel?'✔':''}</span><button class="del" data-del="${o.id}" title="Quitar">✕</button>${o.tipo==='vid'?`<video src="${o.url}#t=0.5" muted preload="metadata"></video><span class="vid">🎬 Video</span>`:`<img src="${o.url}">`}<div class="nm">${esc(o.name)}</div></div>`).join('');
 }
 function imgsSeleccionadas(){
   const l=[];if(selGen)l.push({name:'Imagen generada',get:canvasBlob,url:null});
-  misImgs.filter(o=>o.sel).forEach(o=>l.push({name:o.name,get:()=>Promise.resolve(o.blob),url:o.url}));
+  misImgs.filter(o=>o.sel&&o.tipo!=='vid').forEach(o=>l.push({name:o.name,get:()=>Promise.resolve(o.blob),url:o.url}));
+  misImgs.filter(o=>o.sel&&o.tipo==='vid').forEach(o=>l.push({name:o.name,url:o.url,vid:true}));
   return l;
 }
 async function copiarBlob(p){
@@ -350,9 +358,13 @@ async function copiarBlob(p){
 let cola=[],colaPos=0;
 function mostrarCola(){
   const it=cola[colaPos];
-  $('colaImg').src=it.url||cv.toDataURL('image/jpeg',.6);
-  $('colaTxt').innerHTML=`Imagen ${colaPos+1} de ${cola.length} copiada: pégala con <kbd>Ctrl</kbd>+<kbd>V</kbd> y <kbd>Enter</kbd>.`;
+  $('colaImg').style.display=it.vid?'none':'block';$('colaVid').style.display=it.vid?'block':'none';
+  if(it.vid){$('colaVid').src=it.url+'#t=0.5';
+    $('colaTxt').innerHTML=`🎬 Video ${colaPos+1} de ${cola.length}: <b>${esc(it.name)}</b><br>Adjúntalo en WhatsApp con el clip 📎 → Fotos y videos, y presiona <kbd>Enter</kbd>.`}
+  else{$('colaImg').src=it.url||cv.toDataURL('image/jpeg',.6);
+    $('colaTxt').innerHTML=`Imagen ${colaPos+1} de ${cola.length} copiada: pégala con <kbd>Ctrl</kbd>+<kbd>V</kbd> y <kbd>Enter</kbd>.`}
   $('btnColaSig').style.display=colaPos<cola.length-1?'block':'none';
+  $('btnColaSig').textContent=cola[colaPos+1]?.vid?'🎬 Siguiente: video':'📋 Copiar siguiente imagen';
   $('cola').style.display='block';
 }
 
@@ -445,9 +457,10 @@ async function enviar(c){
   let copiada=false;
   if(modo!=='texto'){
     cola=imgsSeleccionadas();colaPos=0;
-    if(!cola.length){toast('Marca al menos una imagen en la sección 3, o elige “Solo texto”.');return}
-    copiada=await copiarBlob(cola[0].get());
-    if(copiada&&cola.length>1) mostrarCola(); else $('cola').style.display='none';
+    if(!cola.length){toast('Marca al menos una imagen o video en la sección 3, o elige “Solo texto”.');return}
+    if(cola[0].vid){copiada='vid';mostrarCola()}
+    else{copiada=await copiarBlob(cola[0].get());
+      if(copiada&&cola.length>1) mostrarCola(); else $('cola').style.display='none';}
   }
   const txt=modo==='imagen'?'':armar(c);
   const url=`https://web.whatsapp.com/send?phone=${c.cel}`+(txt?`&text=${encodeURIComponent(txt)}`:'');
@@ -458,6 +471,7 @@ async function enviar(c){
   sesionCount++;
   render();
   if(modo!=='texto'){
+    if(copiada==='vid') toast('🎬 En WhatsApp: <kbd>Enter</kbd> para el texto y luego adjunta el video con el clip 📎.',6000); else
     toast(copiada?'🖼️ Imagen copiada. En WhatsApp: <kbd>Enter</kbd> para el texto, luego <kbd>Ctrl</kbd>+<kbd>V</kbd> y <kbd>Enter</kbd> para la imagen.'
                  :'No se pudo copiar la imagen automáticamente. Adjúntala en WhatsApp con el clip 📎.',6000);
   }
@@ -493,7 +507,7 @@ drop.ondragover=e=>{e.preventDefault();drop.classList.add('on')};
 drop.ondragleave=()=>drop.classList.remove('on');
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove('on');e.dataTransfer.files[0]&&leerExcel(e.dataTransfer.files[0])};
 ['fBus','fSeg','fCamp','fCiu','fEst'].forEach(id=>$(id).addEventListener('input',render));
-['iTitulo','iFecha','iFrase','iDesc','iLinea'].forEach(id=>{$(id).value=store.get('bf_'+id,$(id).value);$(id).addEventListener('input',()=>{store.set('bf_'+id,$(id).value);dibujar()})});
+['iTienda','iTitulo','iFecha','iFrase','iDesc','iLinea'].forEach(id=>{$(id).value=store.get('bf_'+id,$(id).value);$(id).addEventListener('input',()=>{store.set('bf_'+id,$(id).value);dibujar()})});
 const idrop=$('imgDrop');
 idrop.onclick=()=>$('imgFile').click();
 $('imgFile').onchange=e=>{subirImgs([...e.target.files]);e.target.value=''};
@@ -508,7 +522,7 @@ $('gal').onclick=e=>{
   else{const o=misImgs.find(x=>x.id===t.dataset.id);if(o){o.sel=!o.sel;DB.put(o)}}
   renderGal();
 };
-$('btnColaSig').onclick=async()=>{colaPos++;const ok=await copiarBlob(cola[colaPos].get());if(ok)mostrarCola();else toast('No se pudo copiar la imagen.')};
+$('btnColaSig').onclick=async()=>{colaPos++;if(cola[colaPos].vid){mostrarCola();return}const ok=await copiarBlob(cola[colaPos].get());if(ok)mostrarCola();else toast('No se pudo copiar la imagen.')};
 $('btnColaFin').onclick=()=>$('cola').style.display='none';
 DB.open().then(()=>DB.all()).then(l=>{misImgs=l.map(o=>({...o,url:URL.createObjectURL(o.blob)}));renderGal()});
 $('btnDl').onclick=async()=>{const b=await canvasBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='black_friday.png';a.click()};
