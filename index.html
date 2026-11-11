@@ -390,9 +390,16 @@ function leerExcel(file){
           camp:key(r,'CAMPAÑA','CAMPANA'),ciudad:key(r,'CIUDAD'),
           cupo:parseFloat(String(key(r,'CUPO_DISPONIBLE','CUPO')).replace(',','.'))||0});
       });
+      if(!todos.length){
+        const cols=rows.length?Object.keys(rows[0]).join(', '):'(hoja vacía)';
+        $('baseInfo').innerHTML=`⚠️ <b>${esc(file.name)}</b>: no se encontró ningún celular válido. Columnas leídas: ${esc(cols)}`;
+        toast('El Excel no tiene celulares válidos en la columna CELULAR.',6000);
+        return;
+      }
       $('baseInfo').innerHTML=`✅ <b>${esc(file.name)}</b>: ${todos.length} clientes con celular válido`+
         (sinCel?` · ${sinCel} sin celular válido`:'')+(dup?` · ${dup} celulares repetidos omitidos`:'');
       store.set('bf_baseNombre',file.name);
+      store.set('bf_base',todos);
       repartir();
     }catch(err){toast('No se pudo leer el archivo: '+esc(err.message))}
   };
@@ -534,6 +541,8 @@ $('tb').onclick=e=>{
 };
 $('btnExport').onclick=exportar;
 $('btnReset').onclick=()=>{if(confirm('¿Borrar todas las marcas de "enviado" de este navegador?')){enviados={};store.set('bf_enviados',enviados);render()}};
+todos=store.get('bf_base',[]);
+if(todos.length){$('baseInfo').innerHTML=`✅ <b>${esc(store.get('bf_baseNombre','Base guardada'))}</b>: ${todos.length} clientes (guardada en este navegador)`;repartir()}
 dibujar();render();
 </script>
 </body>
